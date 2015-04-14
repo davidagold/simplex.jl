@@ -34,7 +34,6 @@ function simplex() 		# (A::Array{Float64, 2}, b::Array{Float64, 1}, c::Array{Flo
 	end
 end
 
-
 #Simplex method Phase I
 function phaseI(A::Array{Float64, 2}, b::Array{Float64, 1})
 	n = length(A[1,:])
@@ -64,18 +63,18 @@ end
 
 #Simplex method Phase II
 function phaseII(x::Array{Float64,1}, A::Array{Float64, 2}, b::Array{Float64, 1}, c::Array{Float64, 1})
-   case1 = true
-   subcase1 = true
-   n = length(x)
-   m = length(b)
-   s = Int64
-   t = Array(Float64, 1)
-   lambdaset = Array(Float64, 1)
-   lambda = Float64
-   xnew = zeros(x)
+	case1 = true
+	subcase1 = true
+	n = length(x)
+	m = length(b)
+	s = Int64
+	t = Array(Float64, 1)
+	lambdaset = Array(Float64, 1)
+	lambda = Float64
+	xnew = zeros(x)
 
-   # Set the basis set of indices
-   basis::Array{Int, 1} = find(x)
+	# Set the basis set of indices
+	basis::Array{Int, 1} = find(x)
 
 	# Set the m x m basis matrix AB
 	AB::Array{Float64, 2} = [ A[i, j] for i in 1:m, j in basis ]
@@ -83,51 +82,51 @@ function phaseII(x::Array{Float64,1}, A::Array{Float64, 2}, b::Array{Float64, 1}
 	# Set the M-dimensional basis vector xB
 	xB::Array{Float64, 1} = [ x[j] for j in basis ]
 
-   # Set the M-dimensional cost vector cB
+	# Set the M-dimensional cost vector cB
 	cB::Array{Float64, 1} = [ c[j] for j in basis ]
 
-   # Find possible feasible solution y to dual problem
+	# Find possible feasible solution y to dual problem
 	y::Array{Float64, 1} = *(transpose(inv(AB)), cB)
 
-   # If y is feasible for the dual problem, then we are in case 1
-   # If y^{T}A_{j} <= c_{j} for j in basis, then y is feasible for the dual problem
+	# If y is feasible for the dual problem, then we are in case 1
+	# If y^{T}A_{j} <= c_{j} for j in basis, then y is feasible for the dual problem
 	yfeas = [ (*(transpose(y), A[1:m, j])[1] - c[j]) for j in setdiff(1:n, basis) ]
 	# println("y^{T}A_{j} - c_{j} for j in basis = ", yfeas)
 	sindex = findfirst(x -> x > 0, yfeas)
-   sindex > 0 && ((case1 = false); s = setdiff(1:n, basis)[sindex])
+	sindex > 0 && ((case1 = false); s = setdiff(1:n, basis)[sindex])
 
-   ###	Case 1	###
+	###	Case 1	###
 	# If we are in case 1, then x is an optimal solution to original LPP
 	if case1 == true
 		return x, true, (c'x)[1]
 
-   else 	###	Case 2	###
+	else 	###	Case 2	###
 		# If we are in case 2, we must check whether we are in subcase 1 or subcase 2
-      # Set the m-dimensional vector t
-      t = *(inv(AB), A[1:m, s])
-      # println("t = ", t)
+		# Set the m-dimensional vector t
+		t = *(inv(AB), A[1:m, s])
+		# println("t = ", t)
 
-      # if t[i] <= 0 for i in basis then we are in subcase 1
-      findfirst(x -> x > 0, t) > 0 && (subcase1 = false)
+		# if t[i] <= 0 for i in basis then we are in subcase 1
+		findfirst(x -> x > 0, t) > 0 && (subcase1 = false)
 
 		###	Subcase 1	###
-      # If we are in subcase 1, then there is no optimal solution
-      subcase1 == false || return x, false, -Inf
+		# If we are in subcase 1, then there is no optimal solution
+		subcase1 == false || return x, false, -Inf
 
 		###	Subcase 2	###
-      # If we are in subcase 2, we find a new basic feasible solution to the LPP with the following:
+		# If we are in subcase 2, we find a new basic feasible solution to the LPP with the following:
 		# We first find the largest lambda such that xnew(lambda) is feasible
-      lambda = minimum([ x[basis[i]]/t[i] for i in find(x -> x > 0 , t)])
+		lambda = minimum([ x[basis[i]]/t[i] for i in find(x -> x > 0 , t)])
 
 		# Set the new basic feasible solution xnew
 		xnew[s] = lambda
-      for h in 1:length(basis)
-         xnew[basis[h]] = x[basis[h]] - lambda*t[h]
-      end
+		for h in 1:length(basis)
+			xnew[basis[h]] = x[basis[h]] - lambda*t[h]
+		end
 
-      # println(*(A, xnew) - b)
-      # println("The cost of x is ", *(transpose(c), x))
-      # println("The cost of xnew is ", *(transpose(c), xnew))
-      return xnew, false, (c'x)[1]
-   end
+		# println(*(A, xnew) - b)
+		# println("The cost of x is ", *(transpose(c), x))
+		# println("The cost of xnew is ", *(transpose(c), xnew))
+		return xnew, false, (c'x)[1]
+	end
 end
